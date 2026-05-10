@@ -73,3 +73,35 @@ add_executable(translator_test test/TranslateShellProcessTest.cpp ${test_depende
 add_test(NAME translator_test COMMAND translator_test)
 
 target_link_libraries(translator_test PRIVATE Qt6::Test)
+
+# ── Packaging (CPack) ──────────────────────────────────────────────────────────
+set(CPACK_PACKAGE_NAME "krunner-translator")
+# Keep the default in sync with "Version" in src/plasma-runner-translator.json for local/manual builds.
+set(PACKAGE_VERSION "2.0.0" CACHE STRING "Package version for CPack")
+set(PACKAGE_DISTRO "" CACHE STRING "Target distro for packaging metadata")
+set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
+set(CPACK_PACKAGE_CONTACT "David Baum <david.baum@naraesk.eu>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "KRunner plugin to translate text using multiple engines")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/naraesk/krunner-translator")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
+set(CPACK_STRIP_FILES TRUE)
+
+# DEB (Ubuntu 25.04 / Debian Trixie package names)
+# Qt6 runtime libs are intentionally omitted — they are pulled in transitively by the KF6 packages
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+    "libkf6runner6, libkf6i18n6, libkf6configwidgets6, libkf6kcmutils6")
+if(PACKAGE_DISTRO STREQUAL "ubuntu")
+    string(APPEND CPACK_DEBIAN_PACKAGE_DEPENDS ", translate-shell")
+elseif(PACKAGE_DISTRO STREQUAL "debian")
+    # Debian Trixie ships translate-shell in contrib, which is not enabled in stock sources.
+    set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "translate-shell")
+endif()
+set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+
+# RPM (Fedora package names; openSUSE Tumbleweed uses same names)
+set(CPACK_RPM_PACKAGE_REQUIRES
+    "kf6-krunner, kf6-ki18n, kf6-kconfigwidgets, kf6-kcmutils, translate-shell")
+set(CPACK_RPM_PACKAGE_LICENSE "GPL-3.0")
+set(CPACK_RPM_PACKAGE_GROUP "Applications/Utilities")
+
+include(CPack)
